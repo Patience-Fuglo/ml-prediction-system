@@ -1,8 +1,8 @@
-# 📈 Machine Learning Stock Prediction & Backtesting System
+# Machine Learning Stock Prediction & Backtesting System
 
 ## Overview
 
-This project implements an end-to-end **machine learning pipeline for financial markets**, designed to predict stock returns and evaluate trading strategies using real market data.
+An end-to-end **machine learning pipeline for financial markets** that predicts stock returns and evaluates trading strategies using real market data.
 
 The system covers the full quantitative research workflow:
 
@@ -12,16 +12,14 @@ The system covers the full quantitative research workflow:
 - Model evaluation with trading metrics
 - Strategy backtesting
 - Feature selection
-- End-to-end pipeline automation
-
-This project is designed to reflect **real-world quantitative research and trading system architecture**.
+- Pipeline automation
 
 ---
 
 ## Key Features
 
-- 📊 **Real Market Data** via Yahoo Finance
-- 🧠 **Feature Engineering**
+- **Real Market Data** via Yahoo Finance
+- **Feature Engineering**
   - Moving averages (SMA)
   - RSI (momentum)
   - MACD (trend/momentum)
@@ -29,34 +27,34 @@ This project is designed to reflect **real-world quantitative research and tradi
   - Volume-based signals
   - Rolling volatility & momentum
   - ATR & return z-scores
-- ⚠️ **Leakage-Free Time-Series Splitting**
-- 🤖 **Machine Learning Models**
+- **Leakage-Free Time-Series Splitting**
+- **Machine Learning Models**
   - Linear Regression
   - Random Forest
   - XGBoost
-- 📈 **Trading-Focused Evaluation**
+- **Trading-Focused Evaluation**
   - RMSE / MAE
   - Directional Accuracy
   - Sharpe Ratio
   - Sortino Ratio
   - Calmar Ratio
   - CAGR
-- 💼 **Realistic Backtesting Engine**
+- **Realistic Backtesting Engine**
   - Strategy vs Buy-and-Hold comparison
   - Trade simulation with transaction costs
   - Slippage & bid-ask spread modeling
   - Signal thresholds (no-trade zone)
-- 🔄 **Walk-Forward Validation**
+- **Walk-Forward Validation**
   - Rolling window retraining
   - Out-of-sample testing
-- 🌐 **Multi-Stock Analysis**
+- **Multi-Stock Analysis**
   - Per-stock models
   - Pooled cross-asset models
-- 🧪 **Feature Selection**
+- **Feature Selection**
   - Correlation filtering
   - Redundancy removal
   - Recursive Feature Elimination (RFE)
-- 📉 **Equity Curve Visualization**
+- **Equity Curve Visualization**
 
 ---
 
@@ -154,8 +152,8 @@ All steps are integrated into a reusable pipeline.
 | Max Drawdown | **-3.07%** | -15.05% |
 | Trading Costs | $1,556 | $0 |
 
-- ✅ Higher risk-adjusted returns (Sharpe)
-- ✅ Significantly lower drawdown
+- Higher risk-adjusted returns (Sharpe)
+- Significantly lower drawdown
 - Walk-forward directional accuracy: 54.55%
 
 ---
