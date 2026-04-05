@@ -5,3 +5,5 @@ yfinance
 scikit-learn
 xgboost
 joblib
+pytest
+pytest-cov
