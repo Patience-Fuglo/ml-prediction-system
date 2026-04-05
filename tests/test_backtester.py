@@ -7,9 +7,11 @@ import numpy as np
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from models import train_random_forest, predict
+from src.models import train_random_forest, predict
+from src.ml_backtester_v2 import MLBacktesterV2 as MLBacktester
 
 
 class MockModel:
@@ -38,8 +40,6 @@ class TestMLBacktesterBasics:
     
     def test_initialization(self):
         """Test backtester can be initialized."""
-        from ml_backtester import MLBacktester
-        
         mock_model = MockModel(np.array([0.01] * 50))
         backtester = MLBacktester(
             model=mock_model,
@@ -52,8 +52,6 @@ class TestMLBacktesterBasics:
     
     def test_reset(self):
         """Test reset functionality."""
-        from ml_backtester import MLBacktester
-        
         mock_model = MockModel(np.array([0.01] * 50))
         backtester = MLBacktester(model=mock_model, starting_cash=100000)
         
@@ -66,12 +64,10 @@ class TestMLBacktesterBasics:
         
         assert backtester.cash == 100000
         assert backtester.shares == 0
-        assert not backtester.in_position
+        assert backtester.position == 0
     
     def test_run_returns_results(self, backtest_data):
         """Test that run returns results dictionary."""
-        from ml_backtester import MLBacktester
-        
         X, y, prices = backtest_data
         mock_model = MockModel(np.array([0.01] * len(X)))
         
@@ -85,78 +81,69 @@ class TestTradingLogic:
     """Tests for trading logic."""
     
     def test_buys_on_positive_prediction(self, backtest_data):
-        """Test that backtester buys when prediction > 0."""
-        from ml_backtester import MLBacktester
-        
+        """Test that backtester buys when prediction > threshold."""
         X, y, prices = backtest_data
         # All positive predictions = should buy immediately
         mock_model = MockModel(np.array([0.01] * len(X)))
         
-        backtester = MLBacktester(model=mock_model, starting_cash=100000)
+        backtester = MLBacktester(model=mock_model, starting_cash=100000, long_threshold=0.005)
         backtester.run(X, y, prices)
         
         # Should have at least one BUY trade
-        buy_trades = [t for t in backtester.trade_log if t["action"] == "BUY"]
+        buy_trades = [t for t in backtester.trade_log if "BUY" in t["action"]]
         assert len(buy_trades) >= 1
     
     def test_sells_on_negative_prediction(self, backtest_data):
-        """Test that backtester sells when prediction <= 0."""
-        from ml_backtester import MLBacktester
-        
+        """Test that backtester closes position when prediction < threshold."""
         X, y, prices = backtest_data
         # Positive then negative = buy then sell
         preds = np.array([0.01] * 10 + [-0.01] * (len(X) - 10))
         mock_model = MockModel(preds)
         
-        backtester = MLBacktester(model=mock_model, starting_cash=100000)
+        backtester = MLBacktester(model=mock_model, starting_cash=100000, 
+                                  long_threshold=0.005, short_threshold=-0.005)
         backtester.run(X, y, prices)
         
-        # Should have sell trades
-        sell_trades = [t for t in backtester.trade_log if "SELL" in t["action"]]
-        assert len(sell_trades) >= 1
+        # Should have close trades
+        close_trades = [t for t in backtester.trade_log if "CLOSE" in t["action"] or "EXIT" in t["action"]]
+        assert len(close_trades) >= 1
     
     def test_no_trade_when_already_in_position(self, backtest_data):
         """Test no duplicate buys when already in position."""
-        from ml_backtester import MLBacktester
-        
         X, y, prices = backtest_data
         # All positive = would try to buy multiple times
         mock_model = MockModel(np.array([0.01] * len(X)))
         
-        backtester = MLBacktester(model=mock_model, starting_cash=100000)
+        backtester = MLBacktester(model=mock_model, starting_cash=100000, long_threshold=0.005)
         backtester.run(X, y, prices)
         
-        # Should only have 1 BUY (and 1 FINAL SELL at end)
+        # Should only have 1 BUY
         buy_trades = [t for t in backtester.trade_log if t["action"] == "BUY"]
         assert len(buy_trades) == 1
     
     def test_fees_deducted(self, backtest_data):
         """Test that fees are deducted from trades."""
-        from ml_backtester import MLBacktester
-        
         X, y, prices = backtest_data
         preds = np.array([0.01] * 10 + [-0.01] * (len(X) - 10))
         mock_model = MockModel(preds)
         
-        backtester = MLBacktester(model=mock_model, starting_cash=100000, fee_rate=0.001)
+        backtester = MLBacktester(model=mock_model, starting_cash=100000, fee_rate=0.001,
+                                  long_threshold=0.005, short_threshold=-0.005)
         backtester.run(X, y, prices)
         
         assert backtester.total_fees_paid > 0
     
     def test_liquidates_at_end(self, backtest_data):
         """Test that position is liquidated at end if still holding."""
-        from ml_backtester import MLBacktester
-        
         X, y, prices = backtest_data
         # All positive = hold until end
         mock_model = MockModel(np.array([0.01] * len(X)))
         
-        backtester = MLBacktester(model=mock_model, starting_cash=100000)
+        backtester = MLBacktester(model=mock_model, starting_cash=100000, long_threshold=0.005)
         backtester.run(X, y, prices)
         
-        # Should have FINAL SELL at end
-        final_sells = [t for t in backtester.trade_log if t["action"] == "FINAL SELL"]
-        assert len(final_sells) == 1
+        # After run, should have closed position
+        assert backtester.position == 0
 
 
 class TestMetricsCalculation:
@@ -164,32 +151,26 @@ class TestMetricsCalculation:
     
     def test_portfolio_history_recorded(self, backtest_data):
         """Test that portfolio history is recorded."""
-        from ml_backtester import MLBacktester
-        
         X, y, prices = backtest_data
         mock_model = MockModel(np.array([0.01] * len(X)))
         
-        backtester = MLBacktester(model=mock_model, starting_cash=100000)
+        backtester = MLBacktester(model=mock_model, starting_cash=100000, long_threshold=0.005)
         backtester.run(X, y, prices)
         
         assert len(backtester.portfolio_history) == len(X)
     
     def test_benchmark_history_recorded(self, backtest_data):
         """Test that benchmark history is recorded."""
-        from ml_backtester import MLBacktester
-        
         X, y, prices = backtest_data
         mock_model = MockModel(np.array([0.01] * len(X)))
         
-        backtester = MLBacktester(model=mock_model, starting_cash=100000)
+        backtester = MLBacktester(model=mock_model, starting_cash=100000, long_threshold=0.005)
         backtester.run(X, y, prices)
         
         assert len(backtester.benchmark_history) == len(X)
     
     def test_trade_count_correct(self, backtest_data):
         """Test that trade count is tracked correctly."""
-        from ml_backtester import MLBacktester
-        
         X, y, prices = backtest_data
         # Multiple buy/sell cycles
         preds = np.array(
@@ -197,7 +178,8 @@ class TestMetricsCalculation:
         )
         mock_model = MockModel(preds)
         
-        backtester = MLBacktester(model=mock_model, starting_cash=100000)
+        backtester = MLBacktester(model=mock_model, starting_cash=100000,
+                                  long_threshold=0.005, short_threshold=-0.005)
         backtester.run(X, y, prices)
         
         assert backtester.total_trades == len(backtester.trade_log)
@@ -208,22 +190,19 @@ class TestEdgeCases:
     
     def test_all_negative_predictions(self, backtest_data):
         """Test behavior with all negative predictions (no trades)."""
-        from ml_backtester import MLBacktester
-        
         X, y, prices = backtest_data
-        mock_model = MockModel(np.array([-0.01] * len(X)))
+        mock_model = MockModel(np.array([-0.001] * len(X)))  # Below threshold
         
-        backtester = MLBacktester(model=mock_model, starting_cash=100000)
+        backtester = MLBacktester(model=mock_model, starting_cash=100000,
+                                  long_threshold=0.005, short_threshold=-0.005)
         backtester.run(X, y, prices)
         
-        # No trades should occur
+        # No trades should occur (predictions in neutral zone)
         assert len(backtester.trade_log) == 0
         assert backtester.cash == 100000
     
     def test_mismatched_indices_raises_error(self, backtest_data):
         """Test that mismatched indices raise error."""
-        from ml_backtester import MLBacktester
-        
         X, y, prices = backtest_data
         # Create prices with different index
         wrong_prices = pd.Series(prices.values, index=range(len(prices)))

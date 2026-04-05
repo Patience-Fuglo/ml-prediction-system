@@ -94,12 +94,23 @@ def add_target(df: pd.DataFrame, horizon: int = 5) -> pd.DataFrame:
     return df
 
 
+def add_returns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Add daily percentage return and log return columns.
+    """
+    df = df.copy()
+    df["daily_return"] = df["Close"].pct_change()
+    df["log_return"] = np.log(df["Close"] / df["Close"].shift(1))
+    return df
+
+
 def prepare_all_features(df: pd.DataFrame, horizon: int = 5) -> pd.DataFrame:
     """
     Run all feature engineering steps and remove NaN rows.
     """
     df = df.copy()
 
+    df = add_returns(df)
     df = add_moving_averages(df)
     df = add_rsi(df)
     df = add_macd(df)

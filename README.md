@@ -212,9 +212,59 @@ All steps are integrated into a reusable pipeline.
 - Significantly lower drawdown
 - Walk-forward directional accuracy: 54.55%
 
+### Sample Console Output
+
+```
+======================================================================
+📈 ML STOCK PREDICTION & BACKTESTING SYSTEM
+======================================================================
+Model: RF
+Horizon: 5 days
+Date range: 2020-01-01 to 2024-01-01
+======================================================================
+
+[INFO] Starting single-stock pipeline for AAPL
+[INFO] AAPL trained: Val RMSE=0.039504, Val DA=51.41%
+
+======================================================================
+ML BACKTEST REPORT V2 (Enhanced)
+======================================================================
+
+Metric                                Strategy       Benchmark
+--------------------------------------------------------------
+Final Value                    $    103,451.06 $    109,802.59
+Total Return                             3.45%           9.80%
+CAGR                                     6.12%          17.78%
+Sharpe Ratio                            1.1998          0.9812
+Sortino Ratio                           0.6440             N/A
+Max Drawdown                            -3.07%         -15.05%
+Calmar Ratio                            1.9942             N/A
+
+--------------------------------------------------------------
+Trading Statistics
+--------------------------------------------------------------
+Hit Ratio                                6.25%
+Profit Factor                           1.7614
+Market Exposure                          9.03%
+
+--------------------------------------------------------------
+Costs
+--------------------------------------------------------------
+Total Trades                                10
+Total Trading Costs            $      1,556.10
+
+==============================================================
+✅ Strategy BEATS benchmark on risk-adjusted returns (Sharpe)
+✅ Strategy has LOWER drawdown than benchmark
+
+✅ Pipeline completed successfully!
+```
+
 ---
 
 ## 🧪 Testing
+
+The project includes a comprehensive test suite with 106 tests covering all core modules.
 
 ### Run All Tests
 
@@ -224,9 +274,6 @@ pytest
 
 # Run tests with verbose output
 pytest -v
-
-# Run tests with coverage report
-pytest --cov=src --cov-report=term-missing
 ```
 
 ### Run Specific Test Modules

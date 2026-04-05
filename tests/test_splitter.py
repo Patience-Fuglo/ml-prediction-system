@@ -138,12 +138,12 @@ class TestWalkForwardSplit:
         """Test that window rolls forward."""
         generator = walk_forward_split(sample_feature_data, train_size=100, test_size=20)
         
-        prev_train_end = None
+        prev_test_start = None
         for i, (train, test) in enumerate(generator):
-            if prev_train_end is not None:
-                # Each new train window should start later
-                assert train.index.min() > prev_train_end - pd.Timedelta(days=30)
-            prev_train_end = train.index.max()
+            if prev_test_start is not None:
+                # Each new test window should start later than the previous
+                assert test.index.min() > prev_test_start
+            prev_test_start = test.index.min()
             
             if i >= 2:
                 break

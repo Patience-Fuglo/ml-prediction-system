@@ -3,10 +3,6 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 
-from splitter import simple_split, separate_features_target
-from features import prepare_all_features
-from data_collector import load_data
-
 
 def train_linear(X_train, y_train):
     """
@@ -79,6 +75,10 @@ def print_top_features(importances, n=10):
 
 
 if __name__ == "__main__":
+    from splitter import simple_split, separate_features_target
+    from features import prepare_all_features
+    from data_collector import load_data
+    
     # Load data from ML-1
     df = load_data("data/AAPL_data.csv")
 

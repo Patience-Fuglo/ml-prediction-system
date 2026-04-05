@@ -1,16 +1,6 @@
 import numpy as np
 import pandas as pd
 
-from models import (
-    train_linear,
-    train_random_forest,
-    train_xgboost,
-    predict,
-)
-from splitter import simple_split, separate_features_target
-from features import prepare_all_features
-from data_collector import load_data
-
 
 def rmse(actual, predicted):
     """
@@ -127,6 +117,11 @@ def compare_all_models(models_results):
 
 
 if __name__ == "__main__":
+    from models import train_linear, train_random_forest, train_xgboost, predict
+    from splitter import simple_split, separate_features_target
+    from features import prepare_all_features
+    from data_collector import load_data
+    
     # Load ML-1 data
     df = load_data("data/AAPL_data.csv")
 
